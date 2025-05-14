@@ -1,0 +1,56 @@
+from flask import Flask, render_template, request
+import os
+
+app = Flask(_name_)
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route('/')
+def index():
+    return render_template("index.html")
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    file = request.files['media']
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
+
+    # Dummy deepfake detection (replace with real model later)
+    result = "This media appears to be REAL." if "real" in file.filename.lower() else "Warning: This may be a DEEPFAKE!"
+
+    return render_template("index.html", result=result)
+
+if _name_ == "_main_":
+    app.run(debug=True)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deepfake Protection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Deepfake Protection System</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="media" required>
+        <button type="submit">Check Deepfake</button>
+    </form>
+
+    {% if result %}
+        <h2>Result:</h2>
+        <p>{{ result }}</p>
+    {% endif %}
+</body>
+</html>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 50px;
+    background-color: #f0f0f0;
+}
+form {
+    margin: 20px;
+}
+input, button {
+    padding: 10px;
+    margin: 10px;
+}
