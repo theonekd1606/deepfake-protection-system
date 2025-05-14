@@ -1,32 +1,30 @@
-from flask import Flask, render_template, request
+from flask import Flask, request, render_template_string
 import os
 
-app = Flask(_name_)
+app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route('/')
-def index():
-    return render_template("index.html")
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    file = request.files['media']
-    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(filepath)
-
-    # Dummy deepfake detection (replace with real model later)
-    result = "This media appears to be REAL." if "real" in file.filename.lower() else "Warning: This may be a DEEPFAKE!"
-
-    return render_template("index.html", result=result)
-
-if _name_ == "_main_":
-    app.run(debug=True)
+HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
     <title>Deepfake Protection System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f0f0f0;
+        }
+        form {
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>Deepfake Protection System</h1>
@@ -41,16 +39,32 @@ if _name_ == "_main_":
     {% endif %}
 </body>
 </html>
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 50px;
-    background-color: #f0f0f0;
-}
-form {
-    margin: 20px;
-}
-input, button {
-    padding: 10px;
-    margin: 10px;
-}
+"""
+
+@app.route('/')
+def index():
+    return render_template_string(HTML_TEMPLATE)
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'media' not in request.files:
+        return render_template_string(HTML_TEMPLATE, result="No file part in the request.")
+    
+    file = request.files['media']
+    
+    if file.filename == '':
+        return render_template_string(HTML_TEMPLATE, result="No file selected.")
+    
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
+
+    # Dummy deepfake detection logic
+    if "real" in file.filename.lower():
+        result = "This media appears to be REAL."
+    else:
+        result = "Warning: This may be a DEEPFAKE!"
+
+    return render_template_string(HTML_TEMPLATE, result=result)
+
+if __name__ == "__main__":
+    app.run(debug=True)
